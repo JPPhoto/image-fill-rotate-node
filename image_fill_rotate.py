@@ -1,4 +1,5 @@
 # Copyright (c) 2023 Jonathan S. Pollack (https://github.com/JPPhoto)
+# Thanks to dwringer for help optimizing
 
 import numpy as np
 import numpy.typing as npt
