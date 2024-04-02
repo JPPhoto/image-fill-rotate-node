@@ -1,22 +1,22 @@
-# Copyright (c) 2023 Jonathan S. Pollack (https://github.com/JPPhoto)
+# Copyright (c) 2024 Jonathan S. Pollack (https://github.com/JPPhoto)
 # Thanks to dwringer for help optimizing
 
 import numpy as np
 import numpy.typing as npt
+
 from invokeai.app.invocations.baseinvocation import (
     BaseInvocation,
-    InputField,
     InvocationContext,
-    WithMetadata,
     invocation,
 )
+from invokeai.app.invocations.fields import InputField, WithBoard, WithMetadata
 from invokeai.app.invocations.primitives import ImageField, ImageOutput
 from invokeai.app.services.image_records.image_records_common import ImageCategory, ResourceOrigin
 from PIL import Image
 
 
-@invocation("image_fill_rotate", title="Image Fill and Rotate", tags=["image_fill_rotate"], version="1.0.0")
-class ImageFillRotateInvocation(BaseInvocation, WithMetadata):
+@invocation("image_fill_rotate", title="Image Fill and Rotate", tags=["image_fill_rotate"], version="1.1.0")
+class ImageFillRotateInvocation(BaseInvocation, WithBoard, WithMetadata):
     """Fills a rectangle by tiling and rotating an image"""
 
     image: ImageField = InputField(description="The image to add film grain to")
@@ -60,25 +60,12 @@ class ImageFillRotateInvocation(BaseInvocation, WithMetadata):
         return new_img
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         image = np.array(image) / 255.0
         image = self.get_tiled_rotated_image(self.width, self.height, image, self.angle)
         image = Image.fromarray((image * 255.0).astype("uint8"))
 
-        image_dto = context.services.images.create(
-            image=image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=context.workflow,
-        )
+        image_dto = context.images.save(image=image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image.width,
-            height=image.height,
-        )
+        return ImageOutput.build(image_dto)
