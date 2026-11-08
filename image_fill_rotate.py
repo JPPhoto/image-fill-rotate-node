@@ -3,8 +3,6 @@
 
 import numpy as np
 import numpy.typing as npt
-from PIL import Image
-
 from invokeai.invocation_api import (
     BaseInvocation,
     ImageField,
@@ -15,6 +13,7 @@ from invokeai.invocation_api import (
     WithMetadata,
     invocation,
 )
+from PIL import Image
 
 
 @invocation("image_fill_rotate", title="Image Fill and Rotate", tags=["image_fill_rotate"], version="1.1.2")
